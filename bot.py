@@ -583,6 +583,10 @@ def main():
     )
     logger = logging.getLogger(__name__)
     
+    # Railway compatibility - handle PORT environment variable
+    port = os.getenv('PORT', '8080')
+    logger.info(f"Railway PORT: {port}")
+    
     print("🚀 Starting Enhanced Phishing Detection Bot...")
     
     try:
