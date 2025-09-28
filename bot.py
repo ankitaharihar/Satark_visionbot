@@ -26,10 +26,14 @@ if sys.platform.startswith('win'):
 
 # --- 1. CONFIGURATION ---
 import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Try to load dotenv if available, but don't fail if not
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # dotenv not available, environment variables should be set by deployment platform
+    pass
 
 # Get token from environment variable (SECURE)
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
