@@ -555,17 +555,62 @@ async def analyze_url_message(update: telegram.Update, context: telegram.ext.Con
 
 # --- 4. MAIN FUNCTION ---
 
+async def error_handler(update: telegram.Update, context: telegram.ext.ContextTypes.DEFAULT_TYPE):
+    """Handle errors that occur during bot operation"""
+    import logging
+    
+    # Log the error
+    logging.error(f"Exception while handling update: {context.error}")
+    
+    # Send a message to the user if possible
+    if update and update.effective_message:
+        try:
+            await update.effective_message.reply_text(
+                "🔧 Sorry, I encountered an error while processing your request. "
+                "Please try again in a moment."
+            )
+        except Exception:
+            pass  # If we can't send a message, just log it
+
 def main():
     """Run the enhanced phishing detection bot"""
-    print("Starting Enhanced Phishing Detection Bot...")
+    import logging
     
-    application = Application.builder().token(TELEGRAM_TOKEN).build()
+    # Set up logging
+    logging.basicConfig(
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        level=logging.INFO
+    )
+    logger = logging.getLogger(__name__)
     
-    application.add_handler(CommandHandler("start", start_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, analyze_url_message))
+    print("🚀 Starting Enhanced Phishing Detection Bot...")
     
-    print("Enhanced bot running with comprehensive security analysis...")
-    application.run_polling(poll_interval=3)
+    try:
+        application = Application.builder().token(TELEGRAM_TOKEN).build()
+        
+        # Add handlers
+        application.add_handler(CommandHandler("start", start_command))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, analyze_url_message))
+        
+        # Add error handler
+        application.add_error_handler(error_handler)
+        
+        print("✅ Enhanced bot running with comprehensive security analysis...")
+        print(f"🔗 Bot token configured: {TELEGRAM_TOKEN[:10]}...")
+        print("📱 Your bot is ready! Start a conversation on Telegram.")
+        print("⏹️  Press Ctrl+C to stop the bot")
+        
+        # Start polling with error handling
+        application.run_polling(
+            poll_interval=3,
+            timeout=10,
+            bootstrap_retries=3
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to start bot: {e}")
+        print(f"❌ Error starting bot: {e}")
+        print("💡 Make sure your token is valid and no other bot instance is running")
 
 if __name__ == '__main__':
     main()
