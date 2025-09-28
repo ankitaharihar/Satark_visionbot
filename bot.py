@@ -25,7 +25,19 @@ if sys.platform.startswith('win'):
     os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 # --- 1. CONFIGURATION ---
-TELEGRAM_TOKEN = "7776856290:AAGc54x230eAigcP-8Y8VvTy7YE_cNA7lqw"
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Get token from environment variable (SECURE)
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+
+if not TELEGRAM_TOKEN:
+    print("ERROR: TELEGRAM_TOKEN not found in environment variables!")
+    print("Please create a .env file with your bot token.")
+    exit(1)
 
 # Risk scoring thresholds
 RISK_THRESHOLDS = {

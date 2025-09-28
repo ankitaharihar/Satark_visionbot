@@ -1,0 +1,39 @@
+# Enhanced requirements.txt with additional security packages
+
+# Core Telegram bot
+python-telegram-bot>=20.0
+
+# Web requests and security
+requests>=2.28.0
+urllib3>=1.26.0
+cryptography>=3.4.0
+
+# DNS and domain analysis
+python-whois>=0.8.0
+dnspython>=2.3.0
+
+# Additional security and analysis
+python-dotenv>=0.19.0      # Environment variables management
+validators>=0.18.0         # URL validation
+tldextract>=3.4.0         # TLD extraction and analysis
+publicsuffix2>=2.20191221  # Public suffix list
+ipaddress                  # IP address validation (built-in)
+
+# Logging and monitoring  
+colorlog>=6.6.0           # Colored logging
+
+# Database (optional)
+sqlite3                   # Built-in SQLite support
+
+# Machine Learning (optional - for advanced detection)
+# scikit-learn>=1.1.0     # Uncomment if you want ML features
+# numpy>=1.21.0           # Uncomment if you want ML features
+# pandas>=1.4.0           # Uncomment if you want ML features
+
+# Testing (development)
+pytest>=6.2.0            # For testing
+pytest-asyncio>=0.18.0   # For async testing
+
+# Additional useful packages
+aiohttp>=3.8.0           # Async HTTP requests
+user-agents>=2.2.0       # User agent parsing
