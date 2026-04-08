@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Satark Vision - URL Shield</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="bg-grid"></div>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">SATARK VISION</p>
+        <h1>Phishing URL Detector</h1>
+        <p class="sub">
+          Paste a link, get a clear verdict with AI + threat intelligence
+          signals.
+        </p>
+      </section>
+
+      <section class="panel">
+        <form id="scan-form">
+          <label for="url-input">URL to analyze</label>
+          <div class="row">
+            <input
+              id="url-input"
+              name="url"
+              type="url"
+              required
+              placeholder="https://example.com/login"
+            />
+            <button id="scan-btn" type="submit">Scan URL</button>
+          </div>
+        </form>
+
+        <div id="status" class="status" aria-live="polite"></div>
+
+        <article id="result-card" class="result hidden">
+          <div class="headline">
+            <span id="badge" class="badge">SAFE</span>
+            <span id="score" class="score">0%</span>
+          </div>
+          <p id="domain" class="domain"></p>
+
+          <div class="grid">
+            <section>
+              <h3>Reasons</h3>
+              <ul id="reasons"></ul>
+            </section>
+            <section>
+              <h3>AI Models</h3>
+              <ul id="ai"></ul>
+            </section>
+            <section>
+              <h3>Threat Intel</h3>
+              <ul id="intel"></ul>
+            </section>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

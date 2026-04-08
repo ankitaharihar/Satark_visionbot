@@ -11,7 +11,7 @@ import requests
 from urllib.parse import urlparse
 from datetime import datetime
 from dotenv import load_dotenv
-from ai_model.llm_url_analyzer import analyze_url_with_llm
+from common.ai_model.llm_url_analyzer import analyze_url_with_llm
 
 load_dotenv()
 

@@ -8,13 +8,18 @@ import os
 import re
 import sys
 import html
+from pathlib import Path
 import telegram
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 
-from ai_model.phishing_detector import classify_url
-from bot_enhancements import (
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from common.ai_model.phishing_detector import classify_url
+from common.bot_enhancements import (
     check_threat_intel,
     init_analysis_db,
     save_analysis_log_sqlite,

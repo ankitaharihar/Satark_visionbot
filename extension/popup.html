@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Satark Scan</title>
+    <style>
+      :root {
+        --ink: #0b1f2c;
+        --muted: #4d6779;
+        --safe: #15803d;
+        --sus: #b45309;
+        --phish: #b91c1c;
+        --accent: #0284c7;
+      }
+      body {
+        margin: 0;
+        width: 360px;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        color: var(--ink);
+        background: #f5fbff;
+      }
+      .wrap {
+        padding: 14px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+      .muted {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 10px;
+      }
+      input {
+        width: 100%;
+        border: 1px solid #c1d7e8;
+        border-radius: 8px;
+        padding: 9px;
+        font-size: 13px;
+        box-sizing: border-box;
+      }
+      .row {
+        margin-top: 8px;
+        display: flex;
+        gap: 8px;
+      }
+      button {
+        border: 0;
+        background: var(--accent);
+        color: #fff;
+        border-radius: 8px;
+        padding: 9px 12px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .result {
+        margin-top: 10px;
+        border: 1px solid #c9deec;
+        border-radius: 10px;
+        padding: 10px;
+        background: #fff;
+      }
+      .badge {
+        display: inline-block;
+        color: #fff;
+        border-radius: 99px;
+        padding: 3px 8px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .safe {
+        background: var(--safe);
+      }
+      .suspicious {
+        background: var(--sus);
+      }
+      .phishing {
+        background: var(--phish);
+      }
+      ul {
+        margin: 8px 0 0;
+        padding-left: 16px;
+      }
+      li {
+        margin: 4px 0;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Satark Scan</h1>
+      <p class="muted">
+        Current tab URL auto-filled. API: http://127.0.0.1:8000
+      </p>
+      <input id="url" type="url" placeholder="https://example.com" />
+      <div class="row">
+        <button id="scan">Analyze</button>
+      </div>
+      <div id="status" class="status"></div>
+      <div id="result" class="result" style="display: none">
+        <span id="badge" class="badge">SAFE</span>
+        <div id="meta" style="margin-top: 6px; font-size: 12px"></div>
+        <ul id="reasons"></ul>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
