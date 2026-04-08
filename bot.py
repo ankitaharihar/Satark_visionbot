@@ -7,6 +7,7 @@ Explainable, fast, rule-based detection
 import os
 import re
 import sys
+import html
 import telegram
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from dotenv import load_dotenv
@@ -98,39 +99,44 @@ async def analyze_url_message(update: telegram.Update, context):
 
             verdict_emoji = '🚨' if final_verdict == 'PHISHING' else '⚠️' if final_verdict == 'SUSPICIOUS' else '✅'
 
+            safe_domain = html.escape(domain)
+            safe_ai_label = html.escape(str(ai_label))
+            safe_llm_label = html.escape(str(llm_label))
+            safe_sources = html.escape(', '.join(threat_intel['sources']) if threat_intel['sources'] else 'None')
+
             reply = (
-                f"{verdict_emoji} *{final_verdict}*\n"
-                f"🔐 Risk Score: {final_score}%\n"
-                f"🌐 Domain: `{domain}`\n\n"
-                "*AI Models:*\n"
-                f"• Model 1 (BERT): {ai_label} ({ai_conf_text})\n"
-                f"• Model 2 (Zero-shot): {llm_label} ({llm_conf_text})\n\n"
-                "*Threat Intelligence:*\n"
+                f"{verdict_emoji} <b>{html.escape(final_verdict)}</b>\n"
+                f"🔐 <b>Risk Score:</b> {final_score}%\n"
+                f"🌐 <b>Domain:</b> <code>{safe_domain}</code>\n\n"
+                "<b>AI Models:</b>\n"
+                f"• Model 1 (BERT): {safe_ai_label} ({html.escape(ai_conf_text)})\n"
+                f"• Model 2 (Zero-shot): {safe_llm_label} ({html.escape(llm_conf_text)})\n\n"
+                "<b>Threat Intelligence:</b>\n"
                 f"• Malicious: {'Yes' if threat_intel['is_malicious'] else 'No'}\n"
-                f"• Sources: {', '.join(threat_intel['sources']) if threat_intel['sources'] else 'None'}\n"
+                f"• Sources: {safe_sources}\n"
                 f"• Intel Score: +{threat_intel['risk_score']}\n\n"
-                "*Reasons:*\n"
+                "<b>Reasons:</b>\n"
             )
 
             if result["reasons"]:
                 for r in result["reasons"]:
-                    reply += f"• {r}\n"
+                    reply += f"• {html.escape(str(r))}\n"
             else:
                 reply += "• No suspicious patterns detected\n"
 
             if threat_intel['details']:
-                reply += "\n*Intel Details:*\n"
+                reply += "\n<b>Intel Details:</b>\n"
                 for detail in threat_intel['details'][:3]:
-                    reply += f"• {detail}\n"
+                    reply += f"• {html.escape(str(detail))}\n"
 
             if final_verdict == 'PHISHING':
-                reply += "\n🚫 *Recommendation:* Do not open this link."
+                reply += "\n🚫 <b>Recommendation:</b> Do not open this link."
             elif final_verdict == 'SUSPICIOUS':
-                reply += "\n⚠️ *Recommendation:* Open only after source verification."
+                reply += "\n⚠️ <b>Recommendation:</b> Open only after source verification."
             else:
-                reply += "\n✅ *Recommendation:* Appears safe, but always verify source."
+                reply += "\n✅ <b>Recommendation:</b> Appears safe, but always verify source."
 
-            await update.message.reply_text(reply, parse_mode="Markdown")
+            await update.message.reply_text(reply, parse_mode="HTML")
 
             save_analysis_log_sqlite(
                 url=url,

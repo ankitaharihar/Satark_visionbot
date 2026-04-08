@@ -36,6 +36,77 @@ SHORTENERS = [
     "short.link", "rebrand.ly", "cutt.ly"
 ]
 
+SUSPICIOUS_TLDS = {
+    "tk", "ml", "ga", "cf", "gq", "xyz", "top", "click", "work", "zip", "country"
+}
+
+# Canonical brand hostnames used for simple anti-typosquatting checks.
+TRUSTED_BRAND_DOMAINS = {
+    "google": ["google.com"],
+    "github": ["github.com"],
+    "microsoft": ["microsoft.com", "live.com", "outlook.com"],
+    "paypal": ["paypal.com"],
+    "amazon": ["amazon.com"],
+    "apple": ["apple.com", "icloud.com"],
+    "facebook": ["facebook.com"],
+    "instagram": ["instagram.com"],
+    "netflix": ["netflix.com"],
+    "linkedin": ["linkedin.com"],
+    "telegram": ["telegram.org"],
+    "whatsapp": ["whatsapp.com"],
+}
+
+
+def _levenshtein_distance(a: str, b: str) -> int:
+    """Compute edit distance for typosquatting detection."""
+    if a == b:
+        return 0
+    if not a:
+        return len(b)
+    if not b:
+        return len(a)
+
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, start=1):
+        curr = [i]
+        for j, cb in enumerate(b, start=1):
+            insert_cost = curr[j - 1] + 1
+            delete_cost = prev[j] + 1
+            replace_cost = prev[j - 1] + (0 if ca == cb else 1)
+            curr.append(min(insert_cost, delete_cost, replace_cost))
+        prev = curr
+    return prev[-1]
+
+
+def _extract_host_and_base(domain: str):
+    """Extract host and approximate base label from a domain/netloc string."""
+    host = domain.lower().split(":")[0].strip(".")
+    labels = [p for p in host.split(".") if p]
+    base = labels[-2] if len(labels) >= 2 else (labels[0] if labels else "")
+    tld = labels[-1] if labels else ""
+    return host, base, tld, labels
+
+
+def detect_typosquatting(domain: str):
+    """Detect likely typosquatted brand domains (e.g., githube.com)."""
+    host, base, _, _ = _extract_host_and_base(domain)
+    findings = []
+
+    for brand, trusted_domains in TRUSTED_BRAND_DOMAINS.items():
+        # Legit brand-owned domain suffix should not be penalized.
+        if any(host == d or host.endswith(f".{d}") for d in trusted_domains):
+            continue
+
+        dist = _levenshtein_distance(base, brand)
+        if dist == 1:
+            findings.append(f"Possible typosquatting: '{base}' looks like '{brand}'")
+            continue
+
+        if base.startswith(brand) and 0 < (len(base) - len(brand)) <= 2:
+            findings.append(f"Possible brand mimicry: '{base}' extends '{brand}'")
+
+    return findings
+
 
 def check_ssl(domain):
     """Check SSL certificate validity"""
@@ -99,14 +170,19 @@ def check_domain_age(domain):
 def check_brand_impersonation(url, domain):
     """Check if URL impersonates known brands"""
     url_lower = url.lower()
-    domain_lower = domain.lower()
+    domain_lower = domain.lower().split(":")[0]
     detected_brands = []
+    _, base_label, _, _ = _extract_host_and_base(domain_lower)
 
     for brand in BRAND_KEYWORDS:
-        if brand in url_lower:
-            # If brand name in URL but not in domain (e.g. paypal.secure-login.com)
-            if brand not in domain_lower.split(".")[0]:
+        if brand in url_lower and brand != base_label:
+            # Brand mention in URL but primary domain label is different.
+            if brand not in base_label:
                 detected_brands.append(brand)
+
+        # Brand keyword appears somewhere in host but is not the base label.
+        if brand in domain_lower and brand != base_label and brand not in detected_brands:
+            detected_brands.append(brand)
 
     return detected_brands
 
@@ -144,6 +220,7 @@ def classify_url(url: str):
     domain = parsed.netloc.lower()
     if domain.startswith("www."):
         domain = domain[4:]
+    host, base_label, tld, labels = _extract_host_and_base(domain)
 
     score = 0
     reasons = []
@@ -171,6 +248,20 @@ def classify_url(url: str):
             score += 20
             reasons.append("URL uses a link shortener")
 
+    # 4b. Suspicious TLD and hostname tricks
+    if tld in SUSPICIOUS_TLDS:
+        score += 20
+        reasons.append(f"Suspicious top-level domain '.{tld}'")
+
+    if "xn--" in host:
+        score += 20
+        reasons.append("Punycode domain detected (possible homograph attack)")
+
+    # Too many subdomains are often used to look legitimate at a glance.
+    if len(labels) >= 4:
+        score += 10
+        reasons.append("Domain has many subdomains")
+
     # 5. SSL Check
     ssl_info = check_ssl(domain)
     details["ssl"] = ssl_info
@@ -192,6 +283,13 @@ def classify_url(url: str):
     if brands:
         score += 30
         reasons.append(f"Brand impersonation detected: {', '.join(brands)}")
+
+    # 7b. Typosquatting detection
+    typo_findings = detect_typosquatting(domain)
+    details["typosquatting_findings"] = typo_findings
+    if typo_findings:
+        score += 60
+        reasons.extend(typo_findings)
 
     # 8. AI Model Classification
     ai_label, ai_confidence = ai_classify_url(url)
