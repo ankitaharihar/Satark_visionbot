@@ -297,28 +297,44 @@ def classify_url(url: str):
     details["ai_confidence"] = ai_confidence
 
     if ai_label == "PHISHING":
-        score += 35
-        reasons.append(f"AI model flagged as phishing ({ai_confidence}% confidence)")
+        ai_conf = float(ai_confidence or 0.0)
+        ai_add = int(max(15, min(45, ai_conf * 0.45)))
+        score += ai_add
+        reasons.append(
+            f"AI model flagged as phishing ({ai_confidence}% confidence, +{ai_add} risk)"
+        )
     elif ai_label == "SAFE":
-        score = max(0, score - 10)
+        ai_conf = float(ai_confidence or 0.0)
+        ai_reduce = int(max(3, min(12, ai_conf * 0.12)))
+        score = max(0, score - ai_reduce)
 
     # 9. Zero-shot AI Model Classification
     llm_result = analyze_url_with_llm(url)
     llm_label = llm_result.get("label")
     llm_confidence = llm_result.get("confidence")
     llm_error = llm_result.get("error")
+    llm_strength = llm_result.get("ensemble_strength")
+    llm_votes = llm_result.get("model_votes") or []
 
     details["llm_label"] = llm_label
     details["llm_confidence"] = llm_confidence
     details["llm_error"] = llm_error
+    details["llm_strength"] = llm_strength
+    details["llm_votes"] = llm_votes
 
     if llm_label == "PHISHING":
-        score += 25
+        llm_conf = float(llm_confidence or 0.0)
+        llm_add = int(max(10, min(35, llm_conf * 0.35)))
+        if isinstance(llm_strength, (int, float)) and llm_strength >= 40:
+            llm_add += 5
+        score += llm_add
         reasons.append(
-            f"Zero-shot AI model flagged as phishing ({llm_confidence}% confidence)"
+            f"Zero-shot AI flagged phishing ({llm_confidence}% confidence, +{llm_add} risk)"
         )
     elif llm_label == "SAFE":
-        score = max(0, score - 5)
+        llm_conf = float(llm_confidence or 0.0)
+        llm_reduce = int(max(2, min(8, llm_conf * 0.08)))
+        score = max(0, score - llm_reduce)
     elif llm_error:
         reasons.append(f"Zero-shot AI model unavailable: {llm_error}")
 
